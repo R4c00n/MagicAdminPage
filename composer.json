@@ -1,0 +1,25 @@
+{
+  "name": "r4c00n/magic-admin-page",
+  "description": "Helper class to generate WordPress admin pages.",
+  "homepage": "https://github.com/R4c00n/MagicAdminPage",
+  "license": "MIT",
+  "keywords": [
+    "wordpress",
+    "wp-admin"
+  ],
+  "authors": [
+    {
+      "name": "R4c00n",
+      "email": "marcel.kempf93@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "MagicAdminPage\\": "src/MagicAdminPage"
+    }
+  }
+}
+
