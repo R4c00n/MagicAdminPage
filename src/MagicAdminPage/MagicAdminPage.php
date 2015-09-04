@@ -321,7 +321,7 @@ class MagicAdminPage {
      */
     protected function getInputField( $type, $name, $value, $class, $id ) {
         return sprintf(
-            '<input type="%s" name="%s" value="%s" class="%s" id="%s" cols="50">',
+            '<input type="%s" name="%s" value="%s" class="%s" id="%s" size="50">',
             $type,
             $name,
             $value,
