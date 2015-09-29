@@ -490,8 +490,8 @@ class MagicAdminPage {
      */
     public function _enqueueScripts() {
         add_action( 'admin_enqueue_scripts', function () {
-            $subDir = str_replace( get_stylesheet_directory(), '', dirname( __FILE__ ) );
-            $componentUrl = get_stylesheet_directory_uri() . $subDir;
+            $subDir = str_replace( get_home_path(), '', dirname( __FILE__ ) );
+            $componentUrl = get_bloginfo('wpurl') . '/' .  $subDir;
             wp_enqueue_script( 'magic-admin-page-js', $componentUrl . '/js/magic-admin-page.js' );
             wp_enqueue_style( 'magic-admin-page-css', $componentUrl . '/css/magic-admin-page.css' );
         } );
