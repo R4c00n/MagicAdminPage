@@ -148,6 +148,9 @@ class MagicAdminPage {
      */
     public function _sectionConfig() {
         foreach ( $this->fields as $key => $options ) {
+            if ( $options['type'] == 'headline' ) {
+                $options['title'] = '<h3 class="magic-admin-page-headline">' . $options['title'] . '</h3>';
+            }
             $options['id'] = $key;
             add_settings_field(
                 $key,
