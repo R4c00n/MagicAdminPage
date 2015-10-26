@@ -149,7 +149,7 @@ class MagicAdminPage {
     public function _sectionConfig() {
         foreach ( $this->fields as $key => $options ) {
             if ( $options['type'] == 'headline' ) {
-                $options['title'] = '<h3 class="magic-admin-page-headline">' . $options['title'] . '</h3>';
+                $options['title'] = $this->getHeadline( $options['title'] );
             }
             $options['id'] = $key;
             add_settings_field(
@@ -444,6 +444,20 @@ class MagicAdminPage {
             $class,
             $id,
             $checked
+        );
+    }
+
+    /**
+     * Generate headline.
+     *
+     * @since 1.0.0
+     * @param string $title
+     * @return string
+     */
+    protected function getHeadline( $title ) {
+        return sprintf(
+            '<h3 class="magic-admin-page-headline">%s</h3>',
+            $title
         );
     }
 
