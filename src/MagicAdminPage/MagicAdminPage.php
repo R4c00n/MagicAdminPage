@@ -148,6 +148,9 @@ class MagicAdminPage {
      */
     public function _sectionConfig() {
         foreach ( $this->fields as $key => $options ) {
+            if ( $options['type'] == 'headline' ) {
+                $options['title'] = $this->getHeadline( $options['title'] );
+            }
             $options['id'] = $key;
             add_settings_field(
                 $key,
@@ -288,10 +291,13 @@ class MagicAdminPage {
             $language,
             $hidden
         );
+
+        $list = ( !empty( $args['list']) ? $args['list'] : '');
+
         switch ( $type ) {
             case 'text':
             case 'hidden':
-                $field .= $this->getInputField( $type, $name, $value, $class, $id );
+                $field .= $this->getInputField( $type, $name, $value, $class, $id, $list, $args);
                 break;
             case 'textarea':
                 $field .= $this->getTextArea( $name, $value, $class, $id );
@@ -317,16 +323,28 @@ class MagicAdminPage {
      * @param string $value
      * @param string $class
      * @param string $id
+     * @param string $list
      * @return string
      */
-    protected function getInputField( $type, $name, $value, $class, $id ) {
-        return sprintf(
-            '<input type="%s" name="%s" value="%s" class="%s" id="%s" size="50">',
+    protected function getInputField( $type, $name, $value, $class, $id, $list = '', $args = array() ) {
+        $output = '';
+
+        if ( !empty( $list) && !empty( $args['options'] ) ) {
+            $output .= '<datalist id="'.$list.'">';
+            foreach ( $args['options'] as $option ) {
+                $output .= '<option value="'. $option .'" />';
+            }
+            $output .= '</datalist>';
+        }
+
+        return $output . sprintf(
+            '<input type="%s" name="%s" value="%s" class="%s" id="%s" size="50" list="%s">',
             $type,
             $name,
             $value,
             $class,
-            $id
+            $id,
+            $list
         );
     }
 
@@ -426,6 +444,20 @@ class MagicAdminPage {
             $class,
             $id,
             $checked
+        );
+    }
+
+    /**
+     * Generate headline.
+     *
+     * @since 1.0.0
+     * @param string $title
+     * @return string
+     */
+    protected function getHeadline( $title ) {
+        return sprintf(
+            '<h3 class="magic-admin-page-headline">%s</h3>',
+            $title
         );
     }
 
