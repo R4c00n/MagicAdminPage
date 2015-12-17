@@ -78,6 +78,12 @@
          */
         protected $fields = array();
 
+        /**
+         * @since 1.0.0
+         * @var mixed[]
+         */
+        protected $includes = array();
+
 
         public function __construct() {
             $countArgs = func_num_args();
@@ -175,6 +181,37 @@
             foreach ( $fields as $key => $field ) {
                 $field[ 'name' ] = $key;
                 $this->addField( $field );
+            }
+        }
+
+        /**
+         * Add a include to the includes array.
+         *
+         * Requires path and position
+         *
+         * Possible positions: beforeForm, afterForm, inFormTop, inFormBottom
+         *
+         * @since 1.0.0
+         * @param mixed[] $field
+         * @return void
+         */
+        public function addInclude( $include ) {
+            if ( empty( $include[ 'path' ] ) || empty( $include[ 'position' ] ) ) {
+                return;
+            }
+            $this->includes[ $include[ 'position' ] ][] = $include;
+        }
+
+        /**
+         * Add multiple includes to the includes array.
+         *
+         * @since 1.0.0
+         * @param mixed[] $fields
+         * @return void
+         */
+        public function addIncludes( $includes ) {
+            foreach ( $includes as $key => $include ) {
+                $this->addInclude( $include );
             }
         }
 
@@ -554,6 +591,21 @@
         }
 
         /**
+         * Get includes of a given position
+         *
+         * @param $position
+         */
+        public function getIncludes( $position ) {
+            if ( empty( $position ) || empty( $this->includes[ $position ] ) ) {
+                return;
+            }
+
+            foreach ( $this->includes[ $position ] as $key => $include ) {
+                include( $include[ 'path' ] );
+            }
+        }
+
+        /**
          * Render the admin page.
          * Callback function for 'add_{$location}_page'.
          *
@@ -570,11 +622,21 @@
                 <h2><?php echo $this->pageTitle; ?></h2>
                 <br>
 
+                <?php $this->getIncludes( 'beforeForm' ); ?>
+
                 <form method="POST" action="options.php">
+
+                    <?php $this->getIncludes( 'inFormTop' ); ?>
+
                     <?php settings_fields( $this->settingsId ); ?>
                     <?php do_settings_sections( $this->menuSlug ); ?>
+
+                    <?php $this->getIncludes( 'inFormBottom' ); ?>
+
                     <?php submit_button(); ?>
                 </form>
+
+                <?php $this->getIncludes( 'afterForm' ); ?>
             </div>
             <?php
         }
