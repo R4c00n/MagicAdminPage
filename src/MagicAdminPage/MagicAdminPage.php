@@ -119,15 +119,15 @@ class MagicAdminPage {
      *      parent
      */
     public function __constructByArray( $args = array() ) {
-        $this->settingsId = !empty( $args[ 'settingsId' ] ) ? $args[ 'settingsId' ] : '';
-        $this->menuSlug = !empty( $args[ 'slug' ] ) ? $args[ 'slug' ] : $this->settingsId;
-        $this->pageTitle = !empty( $args[ 'pageTitle' ] ) ? $args[ 'pageTitle' ] : '';
-        $this->menuTitle = !empty( $args[ 'menuTitle' ] ) ? $args[ 'menuTitle' ] : '';
-        $this->position = !empty( $args[ 'position' ] ) ? $args[ 'position' ] : null;
-        $this->iconUrl = !empty( $args[ 'iconUrl' ] ) ? $args[ 'iconUrl' ] : '';
-        $this->capability = !empty( $args[ 'capability' ] ) ? $args[ 'capability' ] : 'manage_options';
-        $this->location = !empty( $args[ 'location' ] ) ? $args[ 'location' ] : 'menu';
-        $this->parent = !empty( $args[ 'parent' ] ) ? $args[ 'parent' ] : '';
+        $this->settingsId = !empty( $args['settingsId'] ) ? $args['settingsId'] : '';
+        $this->menuSlug = !empty( $args['slug'] ) ? $args['slug'] : $this->settingsId;
+        $this->pageTitle = !empty( $args['pageTitle'] ) ? $args['pageTitle'] : '';
+        $this->menuTitle = !empty( $args['menuTitle'] ) ? $args['menuTitle'] : '';
+        $this->position = !empty( $args['position'] ) ? $args['position'] : null;
+        $this->iconUrl = !empty( $args['iconUrl'] ) ? $args['iconUrl'] : '';
+        $this->capability = !empty( $args['capability'] ) ? $args['capability'] : 'manage_options';
+        $this->location = !empty( $args['location'] ) ? $args['location'] : 'menu';
+        $this->parent = !empty( $args['parent'] ) ? $args['parent'] : '';
 
         if ( empty( $this->settingsId ) && !empty( $this->menuSlug ) ) {
             $this->settingsId = $this->menuSlug;
@@ -167,7 +167,7 @@ class MagicAdminPage {
      * @return void
      */
     public function addField( $field ) {
-        $this->fields[ $field[ 'name' ] ] = $field;
+        $this->fields[$field['name']] = $field;
     }
 
     /**
@@ -179,7 +179,7 @@ class MagicAdminPage {
      */
     public function addFields( $fields ) {
         foreach ( $fields as $key => $field ) {
-            $field[ 'name' ] = $key;
+            $field['name'] = $key;
             $this->addField( $field );
         }
     }
@@ -196,10 +196,10 @@ class MagicAdminPage {
      * @return void
      */
     public function addInclude( $include ) {
-        if ( empty( $include[ 'path' ] ) || empty( $include[ 'position' ] ) ) {
+        if ( empty( $include['path'] ) || empty( $include['position'] ) ) {
             return;
         }
-        $this->includes[ $include[ 'position' ] ][] = $include;
+        $this->includes[$include['position']][] = $include;
     }
 
     /**
@@ -241,13 +241,13 @@ class MagicAdminPage {
      */
     public function _sectionConfig() {
         foreach ( $this->fields as $key => $options ) {
-            if ( $options[ 'type' ] == 'headline' ) {
-                $options[ 'title' ] = $this->getHeadline( $options[ 'title' ] );
+            if ( $options['type'] == 'headline' ) {
+                $options['title'] = $this->getHeadline( $options['title'] );
             }
-            $options[ 'id' ] = $key;
+            $options['id'] = $key;
             add_settings_field(
                 $key,
-                $options[ 'title' ],
+                $options['title'],
                 array( $this, '_renderSettingsField' ),
                 $this->menuSlug,
                 $this->settingsId,
@@ -267,13 +267,13 @@ class MagicAdminPage {
      */
     public function _renderSettingsField( $args ) {
         $options = get_option( $this->settingsId );
-        $type = isset( $args[ 'type' ] ) ? $args[ 'type' ] : 'text';
+        $type = isset( $args['type'] ) ? $args['type'] : 'text';
         $languages = array( get_locale() );
-        $isMultilingual = isset( $args[ 'multilang' ] ) && $args[ 'multilang' ];
+        $isMultilingual = isset( $args['multilang'] ) && $args['multilang'];
         $flagsDir = '';
 
-        if ( !isset( $options[ $args[ 'id' ] ] ) ) {
-            $options[ $args[ 'id' ] ] = array();
+        if ( !isset( $options[$args['id']] ) ) {
+            $options[$args['id']] = array();
         }
 
         # Check if the field is multilingual
@@ -282,8 +282,8 @@ class MagicAdminPage {
                 throw new \Exception( 'To enable multilingual fields, the WPML plugin is required.' );
             }
             $languages = array();
-            foreach ( $GLOBALS[ 'sitepress' ]->get_active_languages() as $value ) {
-                $languages[] = str_replace( '-', '_', $value[ 'tag' ] );
+            foreach ( $GLOBALS['sitepress']->get_active_languages() as $value ) {
+                $languages[] = str_replace( '-', '_', $value['tag'] );
             }
             $flagsDir = WP_PLUGIN_DIR . '/sitepress-multilingual-cms/res/flags';
         }
@@ -298,35 +298,35 @@ class MagicAdminPage {
         # Fields
         foreach ( $languages as $language ) {
             $field = '';
-            if ( !isset( $options[ $args[ 'id' ] ][ $language ] ) ) {
-                $options[ $args[ 'id' ] ][ $language ] = '';
+            if ( !isset( $options[$args['id']][$language] ) ) {
+                $options[$args['id']][$language] = '';
                 if ( $type === 'checkbox' ) {
-                    $options[ $args[ 'id' ] ][ $language ] = false;
+                    $options[$args['id']][$language] = false;
                 }
             }
 
             # Field attributes
             $class = sprintf( 'magic-admin-page-input %s', $type );
-            $id = sprintf( '%s-%s', $args[ 'id' ], $language );
+            $id = sprintf( '%s-%s', $args['id'], $language );
 
             # Field default value
-            $default = isset( $args[ 'default' ] ) ? $args[ 'default' ] : '';
+            $default = isset( $args['default'] ) ? $args['default'] : '';
             if ( is_array( $default ) ) {
-                $default = isset( $default[ $language ] ) ? $default[ $language ] : $default;
+                $default = isset( $default[$language] ) ? $default[$language] : $default;
             }
-            if ( !is_bool( $options[ $args[ 'id' ] ][ $language ] )
-                && empty( $options[ $args[ 'id' ] ][ $language ] )
+            if ( !is_bool( $options[$args['id']][$language] )
+                && empty( $options[$args['id']][$language] )
             ) {
-                $options[ $args[ 'id' ] ][ $language ] = $default;
+                $options[$args['id']][$language] = $default;
             }
 
             # Field description
-            if ( isset( $args[ 'description' ] ) ) {
-                $field .= sprintf( '<p class="howto">%s</p>', $args[ 'description' ] );
+            if ( isset( $args['description'] ) ) {
+                $field .= sprintf( '<p class="howto">%s</p>', $args['description'] );
             }
 
-            $name = sprintf( '%s[%s][%s]', $this->settingsId, $args[ 'id' ], $language );
-            $value = $options[ $args[ 'id' ] ][ $language ];
+            $name = sprintf( '%s[%s][%s]', $this->settingsId, $args['id'], $language );
+            $value = $options[$args['id']][$language];
             $field .= $this->getField( $language, $type, $name, $value, $class, $id, $args );
             $fields .= $field;
         }
@@ -385,7 +385,7 @@ class MagicAdminPage {
             $hidden
         );
 
-        $list = ( !empty( $args[ 'list' ] ) ? $args[ 'list' ] : '' );
+        $list = ( !empty( $args['list'] ) ? $args['list'] : '' );
 
         switch ( $type ) {
             case 'text':
@@ -422,9 +422,9 @@ class MagicAdminPage {
     protected function getInputField( $type, $name, $value, $class, $id, $list = '', $args = array() ) {
         $output = '';
 
-        if ( !empty( $list ) && !empty( $args[ 'options' ] ) ) {
+        if ( !empty( $list ) && !empty( $args['options'] ) ) {
             $output .= '<datalist id="' . $list . '">';
-            foreach ( $args[ 'options' ] as $option ) {
+            foreach ( $args['options'] as $option ) {
                 $output .= '<option value="' . $option . '" />';
             }
             $output .= '</datalist>';
@@ -473,26 +473,26 @@ class MagicAdminPage {
      * @return string
      */
     protected function getSelect( $name, $value, $class, $id, $args ) {
-        $isMultiple = isset( $args[ 'multiple' ] ) && $args[ 'multiple' ];
+        $isMultiple = isset( $args['multiple'] ) && $args['multiple'];
         $name = $isMultiple ? $name . '[]' : $name;
         $multiple = $isMultiple ? ' multiple="multiple"' : '';
 
         $height = '';
         if ( $isMultiple ) {
-            if ( isset( $args[ 'height' ] ) ) {
-                $height = sprintf( 'height:%s;', $args[ 'height' ] );
+            if ( isset( $args['height'] ) ) {
+                $height = sprintf( 'height:%s;', $args['height'] );
             } else {
                 $height = 'height:85px;';
             }
         }
 
-        if ( !isset( $args[ 'options' ] ) ) {
+        if ( !isset( $args['options'] ) ) {
             throw new \InvalidArgumentException( 'Select fields must have an "options" property.' );
         }
         $options = '';
-        foreach ( $args[ 'options' ] as $key => $option ) {
+        foreach ( $args['options'] as $key => $option ) {
             # TODO: Check this with S.H!
-            if ( is_numeric( $key ) && empty( $args[ 'use_key' ] ) ) {
+            if ( is_numeric( $key ) && empty( $args['use_key'] ) ) {
                 $key = $option;
             }
             $selected = '';
@@ -577,7 +577,7 @@ class MagicAdminPage {
             array( $this, '_renderAdminPage' ),
             $this->iconUrl,
             $this->position,
-            $this->parent
+            $this->parent,
         );
 
         // add parent-slug to arguments if location is submenu
@@ -596,12 +596,12 @@ class MagicAdminPage {
      * @param $position
      */
     public function getIncludes( $position ) {
-        if ( empty( $position ) || empty( $this->includes[ $position ] ) ) {
+        if ( empty( $position ) || empty( $this->includes[$position] ) ) {
             return;
         }
 
-        foreach ( $this->includes[ $position ] as $key => $include ) {
-            include( $include[ 'path' ] );
+        foreach ( $this->includes[$position] as $key => $include ) {
+            include( $include['path'] );
         }
     }
 
@@ -671,8 +671,8 @@ class MagicAdminPage {
         $options = get_option( $optionName );
         if ( !empty( $options ) ) {
             foreach ( $options as $key => $value ) {
-                if ( isset( $value[ $language ] ) ) {
-                    $result[ $key ] = $value[ $language ];
+                if ( isset( $value[$language] ) ) {
+                    $result[$key] = $value[$language];
                 }
             }
         }
