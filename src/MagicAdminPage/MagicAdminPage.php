@@ -65,11 +65,74 @@ class MagicAdminPage {
      */
     protected $position;
 
+
+    /**
+     * @since 1.0.0
+     * @var null|number
+     */
+    protected $parent;
+
     /**
      * @since 1.0.0
      * @var mixed[]
      */
     protected $fields = array();
+
+    /**
+     * @since 1.0.0
+     * @var mixed[]
+     */
+    protected $includes = array();
+
+
+    public function __construct() {
+        $countArgs = func_num_args();
+        $args = func_get_args();
+
+        switch ( $countArgs ) {
+            case 1:
+                call_user_func_array( array( $this, '__constructByArray' ), $args );
+                break;
+
+            default:
+                call_user_func_array( array( $this, '__constructByArguments' ), $args );
+                break;
+        }
+
+        // add the actions
+        add_action( 'admin_init', array( $this, '_registerSettings' ) );
+        add_action( 'admin_menu', array( $this, '_registerAdminPage' ) );
+    }
+
+    /**
+     * Construct page with an array of args
+     *
+     * @param array $args
+     *      settingsId
+     *      menuSlug
+     *      pageTitle
+     *      menuTitle
+     *      position
+     *      iconUrl
+     *      capability
+     *      location
+     *      parent
+     */
+    public function __constructByArray( $args = array() ) {
+        $this->settingsId = !empty( $args['settingsId'] ) ? $args['settingsId'] : '';
+        $this->menuSlug = !empty( $args['slug'] ) ? $args['slug'] : $this->settingsId;
+        $this->pageTitle = !empty( $args['pageTitle'] ) ? $args['pageTitle'] : '';
+        $this->menuTitle = !empty( $args['menuTitle'] ) ? $args['menuTitle'] : '';
+        $this->position = !empty( $args['position'] ) ? $args['position'] : null;
+        $this->iconUrl = !empty( $args['iconUrl'] ) ? $args['iconUrl'] : '';
+        $this->capability = !empty( $args['capability'] ) ? $args['capability'] : 'manage_options';
+        $this->location = !empty( $args['location'] ) ? $args['location'] : 'menu';
+        $this->parent = !empty( $args['parent'] ) ? $args['parent'] : '';
+
+        if ( empty( $this->settingsId ) && !empty( $this->menuSlug ) ) {
+            $this->settingsId = $this->menuSlug;
+        }
+    }
 
     /**
      * @since 1.0.0
@@ -80,10 +143,11 @@ class MagicAdminPage {
      * @param string $iconUrl - (optional)
      * @param string $capability
      * @param string $location - (optional)
+     * @param string $parent - (optional)
      */
-    public function __construct( $settingsId, $pageTitle, $menuTitle, $position = null,
-                                 $iconUrl = '', $capability = 'manage_options',
-                                 $location = 'menu' ) {
+    public function __constructByArguments( $settingsId, $pageTitle, $menuTitle, $position = null,
+                                            $iconUrl = '', $capability = 'manage_options',
+                                            $location = 'menu', $parent = '' ) {
         $this->settingsId = $settingsId;
         $this->menuSlug = $settingsId;
         $this->pageTitle = $pageTitle;
@@ -92,9 +156,7 @@ class MagicAdminPage {
         $this->iconUrl = $iconUrl;
         $this->capability = $capability;
         $this->location = $location;
-
-        add_action( 'admin_init', array( $this, '_registerSettings' ) );
-        add_action( 'admin_menu', array( $this, '_registerAdminPage' ) );
+        $this->parent = $parent;
     }
 
     /**
@@ -119,6 +181,37 @@ class MagicAdminPage {
         foreach ( $fields as $key => $field ) {
             $field['name'] = $key;
             $this->addField( $field );
+        }
+    }
+
+    /**
+     * Add a include to the includes array.
+     *
+     * Requires path and position
+     *
+     * Possible positions: beforeForm, afterForm, inFormTop, inFormBottom
+     *
+     * @since 1.0.0
+     * @param mixed[] $field
+     * @return void
+     */
+    public function addInclude( $include ) {
+        if ( empty( $include['path'] ) || empty( $include['position'] ) ) {
+            return;
+        }
+        $this->includes[$include['position']][] = $include;
+    }
+
+    /**
+     * Add multiple includes to the includes array.
+     *
+     * @since 1.0.0
+     * @param mixed[] $fields
+     * @return void
+     */
+    public function addIncludes( $includes ) {
+        foreach ( $includes as $key => $include ) {
+            $this->addInclude( $include );
         }
     }
 
@@ -292,12 +385,12 @@ class MagicAdminPage {
             $hidden
         );
 
-        $list = ( !empty( $args['list']) ? $args['list'] : '');
+        $list = ( !empty( $args['list'] ) ? $args['list'] : '' );
 
         switch ( $type ) {
             case 'text':
             case 'hidden':
-                $field .= $this->getInputField( $type, $name, $value, $class, $id, $list, $args);
+                $field .= $this->getInputField( $type, $name, $value, $class, $id, $list, $args );
                 break;
             case 'textarea':
                 $field .= $this->getTextArea( $name, $value, $class, $id );
@@ -329,10 +422,10 @@ class MagicAdminPage {
     protected function getInputField( $type, $name, $value, $class, $id, $list = '', $args = array() ) {
         $output = '';
 
-        if ( !empty( $list) && !empty( $args['options'] ) ) {
-            $output .= '<datalist id="'.$list.'">';
+        if ( !empty( $list ) && !empty( $args['options'] ) ) {
+            $output .= '<datalist id="' . $list . '">';
             foreach ( $args['options'] as $option ) {
-                $output .= '<option value="'. $option .'" />';
+                $output .= '<option value="' . $option . '" />';
             }
             $output .= '</datalist>';
         }
@@ -475,7 +568,8 @@ class MagicAdminPage {
                 sprintf( 'Position "%s" is not valid.', $this->location )
             );
         }
-        $adminPage = call_user_func_array( $addMenuFn, array(
+
+        $arguments = array(
             $this->pageTitle,
             $this->menuTitle,
             $this->capability,
@@ -483,8 +577,32 @@ class MagicAdminPage {
             array( $this, '_renderAdminPage' ),
             $this->iconUrl,
             $this->position,
-        ) );
+            $this->parent,
+        );
+
+        // add parent-slug to arguments if location is submenu
+        if ( $this->location == 'submenu' && !empty( $this->parent ) ) {
+            array_unshift( $arguments, $this->parent );
+        }
+
+        $adminPage = call_user_func_array( $addMenuFn, $arguments );
+
         add_action( 'load-' . $adminPage, array( $this, '_enqueueScripts' ) );
+    }
+
+    /**
+     * Get includes of a given position
+     *
+     * @param $position
+     */
+    public function getIncludes( $position ) {
+        if ( empty( $position ) || empty( $this->includes[$position] ) ) {
+            return;
+        }
+
+        foreach ( $this->includes[$position] as $key => $include ) {
+            include( $include['path'] );
+        }
     }
 
     /**
@@ -504,11 +622,21 @@ class MagicAdminPage {
             <h2><?php echo $this->pageTitle; ?></h2>
             <br>
 
+            <?php $this->getIncludes( 'beforeForm' ); ?>
+
             <form method="POST" action="options.php">
+
+                <?php $this->getIncludes( 'inFormTop' ); ?>
+
                 <?php settings_fields( $this->settingsId ); ?>
                 <?php do_settings_sections( $this->menuSlug ); ?>
+
+                <?php $this->getIncludes( 'inFormBottom' ); ?>
+
                 <?php submit_button(); ?>
             </form>
+
+            <?php $this->getIncludes( 'afterForm' ); ?>
         </div>
         <?php
     }
@@ -523,7 +651,7 @@ class MagicAdminPage {
     public function _enqueueScripts() {
         add_action( 'admin_enqueue_scripts', function () {
             $subDir = str_replace( get_home_path(), '', dirname( __FILE__ ) );
-            $componentUrl = get_bloginfo('wpurl') . '/' .  $subDir;
+            $componentUrl = get_bloginfo( 'wpurl' ) . '/' . $subDir;
             wp_enqueue_script( 'magic-admin-page-js', $componentUrl . '/js/magic-admin-page.js' );
             wp_enqueue_style( 'magic-admin-page-css', $componentUrl . '/css/magic-admin-page.css' );
         } );
